@@ -110,3 +110,9 @@ Os testes criam um banco com nome aleatório `smartmall_test_<uuid>`, aplicam a 
 - [Trello](https://trello.com/b/TMJ0EfTl)
 
 Esta é uma API para desenvolvimento local, ainda sem autenticação. Use dados fictícios. A chave do futuro provedor de IA ficará exclusivamente no servidor; as variáveis `AI_*` no exemplo estão reservadas e ainda não são consumidas.
+
+## Liderança e contribuição
+
+[@geraldojoao](https://github.com/geraldojoao) lidera o projeto e coordena a revisão e a integração das alterações. Trabalhe em uma branch e abra um pull request para `main`, conforme [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Para conhecer a proposta e consultar as evidências, veja o [roteiro para a banca](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/avaliacao.md).
