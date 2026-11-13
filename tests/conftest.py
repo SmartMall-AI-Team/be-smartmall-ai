@@ -13,6 +13,11 @@ from app.core.config import ROOT, Settings
 from app.main import create_app
 
 
+class DatabaseURL(str):
+    def __repr__(self) -> str:
+        return "'<isolated PostgreSQL database>'"
+
+
 def migration_config(database_url: str) -> Config:
     config = Config(str(ROOT / "alembic.ini"))
     config.attributes["database_url"] = database_url
@@ -31,7 +36,7 @@ def database_url():
     admin = create_engine(source_url, isolation_level="AUTOCOMMIT")
     with admin.connect() as connection:
         connection.execute(text(f'CREATE DATABASE "{name}"'))
-    isolated = source_url.set(database=name).render_as_string(hide_password=False)
+    isolated = DatabaseURL(source_url.set(database=name).render_as_string(hide_password=False))
     try:
         command.upgrade(migration_config(isolated), "head")
         yield isolated
