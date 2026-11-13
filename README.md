@@ -4,6 +4,8 @@ API responsável por persistir ocorrências, apoiar sua triagem com IA e acompan
 
 **Estado:** estrutura inicial; endpoints, persistência e integração com IA ainda precisam ser implementados. Não há aplicação executável neste repositório.
 
+**Implementação em revisão:** a branch `feat/occurrences-api` contém a primeira entrega de FastAPI, PostgreSQL e ocorrências no [PR #1](https://github.com/SmartMall-AI/be-smartmall-ai/pull/1). Consulte o [README dessa branch](https://github.com/SmartMall-AI/be-smartmall-ai/blob/feat/occurrences-api/README.md) para executar a API. A versão em `main` ainda aguarda essa integração.
+
 ## Tecnologias previstas
 
 Python, FastAPI, Pydantic, PostgreSQL, SQLAlchemy e Alembic, conforme o planejamento técnico. O backend será um monólito modular. As versões serão definidas e fixadas na implementação.
@@ -46,3 +48,9 @@ O provedor de IA e seu SDK ainda serão escolhidos; `AI_API_KEY` é um nome de c
 ## Primeira entrega
 
 Implementar cadastro, listagem e detalhe de ocorrências com persistência. Depois integrar análise opcional, tarefas e resumo do dashboard. Acrescentar instruções de execução ao README quando os comandos existirem.
+
+## Liderança e contribuição
+
+[@geraldojoao](https://github.com/geraldojoao) lidera o projeto e coordena a revisão e a integração das alterações. Trabalhe em uma branch e abra um pull request para `main`, conforme [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Para conhecer a proposta e consultar as evidências, veja o [roteiro para a banca](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/avaliacao.md).
