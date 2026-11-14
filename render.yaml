@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     branch: main
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: 'off'
     buildCommand: pip install uv==0.13.8 && uv sync --frozen --no-dev
     startCommand: uv run --no-sync python -m app.deploy
     healthCheckPath: /health/ready
