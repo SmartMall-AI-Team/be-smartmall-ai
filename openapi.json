@@ -981,6 +981,31 @@
           }
         }
       }
+    },
+    "/api/v1/access": {
+      "get": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Access Status",
+        "operationId": "access_status_api_v1_access_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object",
+                  "title": "Response Access Status Api V1 Access Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

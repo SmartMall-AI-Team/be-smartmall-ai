@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -11,7 +11,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=ROOT / ".env", env_file_encoding="utf-8", extra="ignore", validate_assignment=True
+        env_file=ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        validate_assignment=True,
+        hide_input_in_errors=True,
     )
 
     app_env: str = "development"
@@ -24,6 +28,28 @@ class Settings(BaseSettings):
     ai_simulation: bool = False
     openai_api_key: SecretStr | None = None
     ai_timeout_seconds: float = Field(default=20, gt=0, le=120)
+    demo_access_token: SecretStr | None = Field(default=None, repr=False)
+    demo_seed: bool = False
+
+    @field_validator("demo_access_token", mode="before")
+    @classmethod
+    def validate_demo_token(cls, value):
+        if value is None or value == "":
+            return None
+        token = value.get_secret_value() if isinstance(value, SecretStr) else value
+        if len(token) < 32 or not token.isascii() or any(c.isspace() for c in token):
+            raise ValueError("DEMO_ACCESS_TOKEN exige ao menos 32 caracteres ASCII sem espaços.")
+        return value
+
+    @model_validator(mode="after")
+    def validate_deployment(self):
+        if self.app_env != "development" and not self.demo_access_token:
+            raise ValueError("Fora de development, configure DEMO_ACCESS_TOKEN.")
+        if self.app_env == "demo" and not self.ai_simulation:
+            raise ValueError("APP_ENV=demo exige AI_SIMULATION=true.")
+        if self.demo_seed and self.app_env != "demo":
+            raise ValueError("DEMO_SEED só é permitido em APP_ENV=demo.")
+        return self
 
     @field_validator("database_url")
     @classmethod
