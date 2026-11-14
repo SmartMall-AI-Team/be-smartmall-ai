@@ -90,7 +90,7 @@ uv run pytest
 uv run alembic check
 ```
 
-53 testes passaram com PostgreSQL real: persistência, migrações de ida e volta, fluxos operacionais, dados inválidos, revisão e invalidação de análise, alteração concorrente, seed, falhas do provedor, proteção do ambiente e inicialização idempotente do deploy. Os testes de IA usam transporte HTTP controlado, sem chave real nem consumo de saldo. A validação real permanece bloqueada pelo saldo informado acima.
+54 testes passaram com PostgreSQL real: persistência, migrações de ida e volta, fluxos operacionais, dados inválidos, revisão e invalidação de análise, alteração concorrente, seed, falhas do provedor, proteção do ambiente, RLS contra papel público e inicialização idempotente do deploy. Os testes de IA usam transporte HTTP controlado, sem chave real nem consumo de saldo. A validação real permanece bloqueada pelo saldo informado acima.
 
 `TEST_DATABASE_URL` aponta para um banco acessível por usuário com `CREATEDB`. Os testes criam e removem somente um banco aleatório `smartmall_test_<uuid>`; o banco de desenvolvimento é preservado. O GitHub Actions repete as verificações com PostgreSQL próprio. Dependências diretas e resolução completa estão fixadas em `pyproject.toml` e `uv.lock`.
 
@@ -108,6 +108,7 @@ A API usa dados fictícios. O modo de demonstração tem uma barreira de acesso 
 - Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
 - `uv run --no-sync python -m app.deploy` aplica migrações sob bloqueio PostgreSQL, executa o seed fictício idempotente quando `DEMO_SEED=true` e inicia a API na porta `PORT`. Não exige o pre-deploy pago do Render. O seed é permitido somente em desenvolvimento ou demonstração.
 - Em ambiente protegido, todas as rotas, inclusive Swagger/OpenAPI, exigem `Authorization: Bearer <código>`. Apenas `/health`, `/health/ready` e preflights CORS são públicos. Respostas protegidas não são armazenadas em cache. `GET /api/v1/access` valida o código sem consultar o banco.
+- As migrações habilitam RLS sem políticas públicas nas cinco tabelas operacionais, bloqueando acesso por papéis não proprietários mesmo com grants de tabela. A conexão privada da API deve ser proprietária dessas tabelas; esse é o papel que executa as migrações. Assim, a Data API do Supabase não oferece um caminho público alternativo aos dados.
 
 O código compartilhado permite acesso completo aos dados fictícios do ambiente; não estabelece permissões por pessoa nem torna o sistema adequado a dados reais. O modo `demo` sempre simula IA e não consome a OpenAI. O plano gratuito do Render pode suspender por inatividade.
 

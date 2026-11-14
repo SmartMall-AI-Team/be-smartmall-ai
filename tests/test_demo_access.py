@@ -1,7 +1,10 @@
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
@@ -95,3 +98,42 @@ def test_demo_bootstrap_is_idempotent_and_serves_protected_persisted_data(clean_
         analysis = client.post(f"/api/v1/occurrences/{occurrence['id']}/analyze")
         assert analysis.status_code == 200
         assert analysis.json()["is_simulation"] is True
+
+
+def test_database_public_role_cannot_read_or_insert_even_with_table_grants(clean_database):
+    engine = create_engine(clean_database)
+    try:
+        with engine.connect() as connection:
+            is_admin = connection.scalar(
+                text("SELECT rolsuper FROM pg_roles WHERE rolname = current_user")
+            )
+            connection.rollback()
+            if not is_admin:
+                pytest.skip("A verificação de papel público exige superuser no banco de testes.")
+            transaction = connection.begin()
+            try:
+                role = "smartmall_probe_" + uuid4().hex
+                connection.execute(text(f'CREATE ROLE "{role}" NOLOGIN'))
+                connection.execute(text(f'GRANT USAGE ON SCHEMA public TO "{role}"'))
+                connection.execute(text(f'GRANT SELECT, INSERT ON users TO "{role}"'))
+                connection.execute(
+                    text(
+                        "INSERT INTO users (id, name, role, is_active) "
+                        "VALUES (gen_random_uuid(), 'Fictício protegido', 'technician', true)"
+                    )
+                )
+                assert connection.scalar(text("SELECT count(*) FROM users")) == 1
+                connection.execute(text(f'SET LOCAL ROLE "{role}"'))
+                assert connection.scalar(text("SELECT count(*) FROM users")) == 0
+                with pytest.raises(DBAPIError):
+                    connection.execute(
+                        text(
+                            "INSERT INTO users (id, name, role, is_active) "
+                            "VALUES (gen_random_uuid(), 'Inserção bloqueada', 'technician', true)"
+                        )
+                    )
+            finally:
+                # Role creation, grants and probe data are all rolled back together.
+                transaction.rollback()
+    finally:
+        engine.dispose()
