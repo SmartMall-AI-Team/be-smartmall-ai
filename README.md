@@ -100,13 +100,13 @@ uv run alembic check
 
 `app/routers` define rotas; `schemas` valida contratos; `services` aplica regras; `database` persiste; `migrations` evolui o banco. O histórico não registra um autor autenticado, porque login e autorização ainda estão fora deste MVP. Os papéis de `/users` são descritivos e não restringem acesso.
 
-A API usa dados fictícios. O modo de demonstração tem uma barreira de acesso compartilhada; não há identidade autenticada individual, autorização por perfil, paginação ou upload de fotos. O Compose do banco e a execução local são caminhos distintos; Docker não estava disponível no ambiente usado para a verificação local.
+A API usa dados fictícios. O código compartilhado é opcional no modo de demonstração; não há identidade autenticada individual, autorização por perfil, paginação ou upload de fotos. O Compose do banco e a execução local são caminhos distintos; Docker não estava disponível no ambiente usado para a verificação local.
 
 ## Deploy de demonstração
 
 `render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy manual e `/health/ready` como verificação. Por decisão da liderança, a API não publica automaticamente após merges; conferir o check `check` e a main antes de acionar **Manual Deploy → Deploy latest commit**. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
 
-- `APP_ENV=demo` exige `AI_SIMULATION=true` e `DEMO_ACCESS_TOKEN` privado com pelo menos 32 caracteres ASCII sem espaços. Fora de `development`, a ausência do código impede iniciar a aplicação. O Blueprint gera esse código no Render; não o copie para commits, URLs ou variáveis `VITE_`.
+- `APP_ENV=demo` exige `AI_SIMULATION=true`. A demonstração publicada dispensa código de acesso: o Blueprint deixa `DEMO_ACCESS_TOKEN` vazio. Se configurado, o código deve ter pelo menos 32 caracteres ASCII sem espaços e não deve ser copiado para commits, URLs ou variáveis `VITE_`. Fora de `development`/`demo`, ele continua obrigatório.
 - Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
 - `uv run --no-sync python -m app.deploy` aplica migrações sob bloqueio PostgreSQL, executa o seed fictício idempotente quando `DEMO_SEED=true` e inicia a API na porta `PORT`. Não exige o pre-deploy pago do Render. O seed é permitido somente em desenvolvimento ou demonstração.
 - Em ambiente protegido, todas as rotas, inclusive Swagger/OpenAPI, exigem `Authorization: Bearer <código>`. Apenas `/health`, `/health/ready` e preflights CORS são públicos. Respostas protegidas não são armazenadas em cache. `GET /api/v1/access` valida o código sem consultar o banco.

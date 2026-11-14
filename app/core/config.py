@@ -43,8 +43,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_deployment(self):
-        if self.app_env != "development" and not self.demo_access_token:
-            raise ValueError("Fora de development, configure DEMO_ACCESS_TOKEN.")
+        if self.app_env not in {"development", "demo"} and not self.demo_access_token:
+            raise ValueError("Fora de development/demo, configure DEMO_ACCESS_TOKEN.")
         if self.app_env == "demo" and not self.ai_simulation:
             raise ValueError("APP_ENV=demo exige AI_SIMULATION=true.")
         if self.demo_seed and self.app_env != "demo":
