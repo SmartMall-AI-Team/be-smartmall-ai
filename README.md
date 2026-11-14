@@ -104,7 +104,7 @@ A API usa dados fictícios. O modo de demonstração tem uma barreira de acesso 
 
 ## Deploy de demonstração
 
-`render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy após checks aprovados e `/health/ready` como verificação. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
+`render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy manual e `/health/ready` como verificação. Por decisão da liderança, a API não publica automaticamente após merges; conferir o check `check` e a main antes de acionar **Manual Deploy → Deploy latest commit**. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
 
 - `APP_ENV=demo` exige `AI_SIMULATION=true` e `DEMO_ACCESS_TOKEN` privado com pelo menos 32 caracteres ASCII sem espaços. Fora de `development`, a ausência do código impede iniciar a aplicação. O Blueprint gera esse código no Render; não o copie para commits, URLs ou variáveis `VITE_`.
 - Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
