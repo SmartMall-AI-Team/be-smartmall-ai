@@ -90,7 +90,7 @@ uv run pytest
 uv run alembic check
 ```
 
-46 testes passaram com PostgreSQL real: persistência, migrações de ida e volta, fluxos operacionais, dados inválidos, revisão e invalidação de análise, alteração concorrente, seed e falhas do provedor. Os testes de IA usam transporte HTTP controlado, sem chave real nem consumo de saldo. A validação real permanece bloqueada pelo saldo informado acima.
+54 testes passaram com PostgreSQL real: persistência, migrações de ida e volta, fluxos operacionais, dados inválidos, revisão e invalidação de análise, alteração concorrente, seed, falhas do provedor, proteção do ambiente, RLS contra papel público e inicialização idempotente do deploy. Os testes de IA usam transporte HTTP controlado, sem chave real nem consumo de saldo. A validação real permanece bloqueada pelo saldo informado acima.
 
 `TEST_DATABASE_URL` aponta para um banco acessível por usuário com `CREATEDB`. Os testes criam e removem somente um banco aleatório `smartmall_test_<uuid>`; o banco de desenvolvimento é preservado. O GitHub Actions repete as verificações com PostgreSQL próprio. Dependências diretas e resolução completa estão fixadas em `pyproject.toml` e `uv.lock`.
 
@@ -98,6 +98,18 @@ uv run alembic check
 
 `app/routers` define rotas; `schemas` valida contratos; `services` aplica regras; `database` persiste; `migrations` evolui o banco. O histórico não registra um autor autenticado, porque login e autorização ainda estão fora deste MVP. Os papéis de `/users` são descritivos e não restringem acesso.
 
-A API é destinada à demonstração local com dados fictícios. Não há autenticação, paginação, upload de fotos nem hospedagem pública configurada. Antes de uma exposição pública ou uso com dados reais, implementar controles de acesso e proteção contra abuso da chamada de IA. O Compose do banco e a execução local são caminhos distintos; Docker não estava disponível no ambiente usado para a verificação local.
+A API usa dados fictícios. O modo de demonstração tem uma barreira de acesso compartilhada; não há identidade autenticada individual, autorização por perfil, paginação ou upload de fotos. O Compose do banco e a execução local são caminhos distintos; Docker não estava disponível no ambiente usado para a verificação local.
+
+## Deploy de demonstração
+
+`render.yaml` prepara um serviço gratuito, com Python 3.12, dependências fixadas, deploy após checks aprovados e `/health/ready` como verificação. A publicação efetiva e os endereços serão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
+
+- `APP_ENV=demo` exige `AI_SIMULATION=true` e `DEMO_ACCESS_TOKEN` privado com pelo menos 32 caracteres ASCII sem espaços. Fora de `development`, a ausência do código impede iniciar a aplicação. O Blueprint gera esse código no Render; não o copie para commits, URLs ou variáveis `VITE_`.
+- Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
+- `uv run --no-sync python -m app.deploy` aplica migrações sob bloqueio PostgreSQL, executa o seed fictício idempotente quando `DEMO_SEED=true` e inicia a API na porta `PORT`. Não exige o pre-deploy pago do Render. O seed é permitido somente em desenvolvimento ou demonstração.
+- Em ambiente protegido, todas as rotas, inclusive Swagger/OpenAPI, exigem `Authorization: Bearer <código>`. Apenas `/health`, `/health/ready` e preflights CORS são públicos. Respostas protegidas não são armazenadas em cache. `GET /api/v1/access` valida o código sem consultar o banco.
+- As migrações habilitam RLS sem políticas públicas nas cinco tabelas operacionais, bloqueando acesso por papéis não proprietários mesmo com grants de tabela. A conexão privada da API deve ser proprietária dessas tabelas; esse é o papel que executa as migrações. Assim, a Data API do Supabase não oferece um caminho público alternativo aos dados.
+
+O código compartilhado permite acesso completo aos dados fictícios do ambiente; não estabelece permissões por pessoa nem torna o sistema adequado a dados reais. O modo `demo` sempre simula IA e não consome a OpenAI. O plano gratuito do Render pode suspender por inatividade.
 
 [Liderança: @geraldojoao](https://github.com/geraldojoao). Trabalhe em branch e abra PR conforme [CONTRIBUTING.md](CONTRIBUTING.md); a `main` mantém checks e proteções. Consulte [escopo](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/escopo.md), [backlog](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/backlog.md), [frontend](https://github.com/SmartMall-AI/fe-smartmall-ai) e [Trello](https://trello.com/b/TMJ0EfTl).

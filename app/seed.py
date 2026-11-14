@@ -72,8 +72,8 @@ def seed(session: Session) -> None:
 
 def main() -> None:
     settings = Settings()
-    if settings.app_env != "development":
-        raise SystemExit("O seed só é permitido com APP_ENV=development.")
+    if settings.app_env not in {"development", "demo"}:
+        raise SystemExit("O seed só é permitido com APP_ENV=development ou demo.")
     engine = create_database_engine(settings.database_url)
     try:
         with Session(engine) as session:
