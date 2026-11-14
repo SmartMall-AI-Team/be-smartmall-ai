@@ -2,7 +2,7 @@
 
 API FastAPI/PostgreSQL para ocorrências operacionais de um shopping, com triagem assistida por OpenAI e revisão humana.
 
-**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O frontend e a validação com usuários continuam pendentes.
+**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O [frontend #3](https://github.com/SmartMall-AI/fe-smartmall-ai/pull/3) acrescenta interface executável com 10 testes integrados de navegador aprovados em desktop e celular; veja [evidências e pendências](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/entrega-frontend.md). Validação com usuários, autenticação real e hospedagem continuam pendentes.
 
 ## Executar
 
