@@ -1,56 +1,103 @@
 # SmartMall AI Backend
 
-API responsável por persistir ocorrências, apoiar sua triagem com IA e acompanhar tarefas operacionais do shopping.
+API FastAPI/PostgreSQL para ocorrências operacionais de um shopping, com triagem assistida por OpenAI e revisão humana.
 
-**Estado:** estrutura inicial; endpoints, persistência e integração com IA ainda precisam ser implementados. Não há aplicação executável neste repositório.
+**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O frontend e a validação com usuários continuam pendentes.
 
-**Implementação em revisão:** a branch `feat/occurrences-api` contém a primeira entrega de FastAPI, PostgreSQL e ocorrências no [PR #1](https://github.com/SmartMall-AI/be-smartmall-ai/pull/1). Consulte o [README dessa branch](https://github.com/SmartMall-AI/be-smartmall-ai/blob/feat/occurrences-api/README.md) para executar a API. A versão em `main` ainda aguarda essa integração.
+## Executar
 
-## Tecnologias previstas
+Requisitos: Python 3.12, [uv](https://docs.astral.sh/uv/getting-started/installation/) e PostgreSQL 18 (instalado ou via Docker Compose).
 
-Python, FastAPI, Pydantic, PostgreSQL, SQLAlchemy e Alembic, conforme o planejamento técnico. O backend será um monólito modular. As versões serão definidas e fixadas na implementação.
-
-## Organização
-
-```text
-app/
-  core/       configuração e regras compartilhadas
-  database/   conexão e modelos de persistência
-  schemas/    modelos de entrada e saída
-  routers/    endpoints REST
-  services/   regras de negócio e serviço de IA
-tests/        testes dos fluxos e falhas relevantes
+```powershell
+uv sync --frozen
+Copy-Item .env.example .env
 ```
 
-Os diretórios estão reservados para a implementação. Não existem módulos funcionais ainda.
+Escolha uma senha local e mantenha `POSTGRES_PASSWORD`, `DATABASE_URL` e `TEST_DATABASE_URL` alinhados. Caracteres especiais em senhas de URLs precisam de codificação de URL. Nunca versione `.env`.
 
-## Responsabilidades
+```powershell
+docker compose up -d --wait db
+uv run alembic upgrade head
+uv run python -m app.seed
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-- Validar e salvar ocorrências antes de solicitar qualquer análise.
-- Listar e detalhar ocorrências, tarefas e equipamentos.
-- Encapsular a integração com o provedor de IA.
-- Retornar sugestões estruturadas e permitir revisão humana.
-- Gerar indicadores do dashboard a partir dos dados persistidos.
-- Manter a chave do provedor de IA exclusivamente no servidor.
+Com PostgreSQL já instalado, ajuste as URLs e dispense o comando Docker. `POSTGRES_PORT` controla a porta publicada pelo Compose. O seed é opcional, idempotente, restrito a `APP_ENV=development` e usa somente dados fictícios; não chama a IA nem sobrescreve registros existentes.
 
-## Contrato e documentação
+- [Swagger local](http://127.0.0.1:8000/docs) e [OpenAPI local](http://127.0.0.1:8000/openapi.json).
+- [Contrato exportado](openapi.json), gerado por `uv run python -m app.export_openapi`.
+- `GET /health`: processo disponível. `GET /health/ready`: conexão com o banco, ou 503.
+- `CORS_ORIGINS` aceita origens HTTP/HTTPS separadas por vírgula; padrão `http://localhost:5173`.
 
-O repositório [docs-smartmall-ai](https://github.com/SmartMall-AI/docs-smartmall-ai) mantém [contrato-api.md](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/contrato-api.md), [arquitetura.md](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/arquitetura.md) e [backlog.md](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/backlog.md). Consultar esses arquivos antes de implementar os endpoints. Os nomes de campos e enums descritos ali são uma proposta inicial para alinhamento da equipe.
+As migrações são explícitas, sem criação automática de tabelas ao iniciar a API.
 
-A interface fica em [fe-smartmall-ai](https://github.com/SmartMall-AI/fe-smartmall-ai).
+## Rotas implementadas
 
-## Configuração prevista
+Base `/api/v1`. Detalhes de campos, enums e erros no [contrato compartilhado](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/contrato-api.md) e no Swagger.
 
-Consultar `.env.example`. Ele contém apenas exemplos e não configura um servidor funcional. Não versionar `.env`, credenciais ou chaves de API.
+| Recurso | Operações |
+| --- | --- |
+| `/occurrences` | POST e GET; filtros combináveis `status`, `priority`, `category`, `equipment_id`, `location` |
+| `/occurrences/{id}` | GET com tarefas vinculadas; PATCH de campos editáveis |
+| `/occurrences/{id}/analyze` | POST solicita e salva sugestões estruturadas |
+| `/occurrences/{id}/history` | GET histórico de criação, alterações, análise e revisão |
+| `/users` | POST cadastro de responsável e GET de ativos, com filtro `role` |
+| `/tasks` | POST e GET; filtros `status`, `assigned_to`, `occurrence_id` |
+| `/tasks/{id}` | GET e PATCH |
+| `/equipment` | POST e GET; filtros `operational_status`, `location` |
+| `/equipment/{id}` | GET e PATCH |
+| `/equipment/{id}/occurrences` | GET ocorrências vinculadas |
+| `/dashboard/summary` | GET contagens calculadas do banco |
 
-O provedor de IA e seu SDK ainda serão escolhidos; `AI_API_KEY` é um nome de configuração da aplicação, não uma variável reconhecida automaticamente por um SDK.
+Listas retornam arrays sem paginação no MVP. Ocorrências vêm da mais recente para a mais antiga; tarefas por prazo, equipamentos e responsáveis por nome. A busca de local usa trecho literal, com comparação de caixa dependente da configuração do PostgreSQL; não remove acentos.
 
-## Primeira entrega
+## Fluxo para integrar o frontend
 
-Implementar cadastro, listagem e detalhe de ocorrências com persistência. Depois integrar análise opcional, tarefas e resumo do dashboard. Acrescentar instruções de execução ao README quando os comandos existirem.
+1. Criar ocorrência com `title`, `description`, `location` e, opcionalmente, `category`/`equipment_id`. A API define `status=open`, `priority=untriaged`, UUID e datas UTC.
+2. Solicitar `/analyze`. As sugestões ficam em `ai_analysis`; a API não aplica prioridade, categoria, equipe ou recomendação automaticamente.
+3. A pessoa escolhe os valores e envia PATCH, por exemplo `{"priority":"high","assigned_team":"Climatização","confirm_ai_review":true}`. A confirmação exige análise atual e grava `ai_reviewed_at`. A classificação manual funciona sem IA, omitindo a confirmação.
+4. Obter um responsável em `/users`; criar tarefa com `occurrence_id`, `title`, `assigned_to`, `due_at` com fuso e `details` opcional.
+5. Iniciar a tarefa (`pending` → `in_progress`) também põe uma ocorrência aberta em andamento. Concluir (`in_progress` → `completed`) grava a data, sem encerrar automaticamente a ocorrência. Pode-se retornar de `in_progress` a `pending` ou reativar `completed` para `in_progress`.
+6. Resolver a ocorrência explicitamente via PATCH. Tarefas pendentes impedem o encerramento (409). Para adicionar ou reativar tarefa de ocorrência resolvida, primeiro reabrir a ocorrência.
+7. Consultar histórico e dashboard. Mudanças e eventos são gravados na mesma transação; escritas de tarefas e encerramento serializam pelo bloqueio da ocorrência.
 
-## Liderança e contribuição
+Alterar título, descrição, local ou vínculo de equipamento invalida a análise anterior e sua confirmação. Uma alteração concorrente durante a chamada de IA descarta a resposta com 409. PATCH vazio, campos desconhecidos ou `null` em campo obrigatório são recusados. Equipamentos e responsáveis precisam existir; responsáveis inativos não recebem tarefas.
 
-[@geraldojoao](https://github.com/geraldojoao) lidera o projeto e coordena a revisão e a integração das alterações. Trabalhe em uma branch e abra um pull request para `main`, conforme [CONTRIBUTING.md](CONTRIBUTING.md).
+## OpenAI e demonstração
 
-Para conhecer a proposta e consultar as evidências, veja o [roteiro para a banca](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/avaliacao.md).
+No `.env` local:
+
+```dotenv
+AI_PROVIDER=openai
+AI_MODEL=gpt-5.4-mini
+AI_SIMULATION=false
+OPENAI_API_KEY=SUBSTITUA_SOMENTE_NO_ARQUIVO_LOCAL
+AI_TIMEOUT_SECONDS=20
+```
+
+Use uma chave com permissão de escrita na Responses API. O saldo da API é necessário para chamadas reais. A chave fica apenas no servidor. O SDK usa Responses com saída estruturada validada, `store=false`, limite de tokens e sem repetição automática. São enviados título, descrição, local e categoria do relato; dados de responsáveis não são enviados.
+
+Falha, timeout, recusa ou resposta inválida retornam 503 sem apagar ocorrência nem análise válida anterior. O operador pode classificar manualmente e tentar novamente depois. O conteúdo dos erros do provedor não é exposto pela API nem registrado no log.
+
+Para demonstrar sem consumir a API, defina `AI_SIMULATION=true` e reinicie o servidor. O resultado determinístico traz `is_simulation=true`; a interface deve mostrar essa condição. O modo real retorna `false`. Não existe substituição silenciosa por simulação após falha real. `store=false` desativa o armazenamento da resposta para recuperação; não representa garantia geral de retenção zero pelo provedor.
+
+## Verificar
+
+```powershell
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+uv run alembic check
+```
+
+46 testes passaram com PostgreSQL real: persistência, migrações de ida e volta, fluxos operacionais, dados inválidos, revisão e invalidação de análise, alteração concorrente, seed e falhas do provedor. Os testes de IA usam transporte HTTP controlado, sem chave real nem consumo de saldo. A validação real permanece bloqueada pelo saldo informado acima.
+
+`TEST_DATABASE_URL` aponta para um banco acessível por usuário com `CREATEDB`. Os testes criam e removem somente um banco aleatório `smartmall_test_<uuid>`; o banco de desenvolvimento é preservado. O GitHub Actions repete as verificações com PostgreSQL próprio. Dependências diretas e resolução completa estão fixadas em `pyproject.toml` e `uv.lock`.
+
+## Organização e limites
+
+`app/routers` define rotas; `schemas` valida contratos; `services` aplica regras; `database` persiste; `migrations` evolui o banco. O histórico não registra um autor autenticado, porque login e autorização ainda estão fora deste MVP. Os papéis de `/users` são descritivos e não restringem acesso.
+
+A API é destinada à demonstração local com dados fictícios. Não há autenticação, paginação, upload de fotos nem hospedagem pública configurada. Antes de uma exposição pública ou uso com dados reais, implementar controles de acesso e proteção contra abuso da chamada de IA. O Compose do banco e a execução local são caminhos distintos; Docker não estava disponível no ambiente usado para a verificação local.
+
+[Liderança: @geraldojoao](https://github.com/geraldojoao). Trabalhe em branch e abra PR conforme [CONTRIBUTING.md](CONTRIBUTING.md); a `main` mantém checks e proteções. Consulte [escopo](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/escopo.md), [backlog](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/backlog.md), [frontend](https://github.com/SmartMall-AI/fe-smartmall-ai) e [Trello](https://trello.com/b/TMJ0EfTl).
