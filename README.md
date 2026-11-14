@@ -1,10 +1,12 @@
 # SmartMall AI Backend
 
+> **Cópia independente — SmartMall-AI-Team.** Administração: [@Setezin7](https://github.com/Setezin7). Código e histórico preservados da organização anterior. Links de PRs, execuções antigas e serviços publicados registram evidências da origem; esses recursos não foram migrados nem recriados por esta cópia. Consulte o [registro da cópia](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/copia-team.md).
+
 API FastAPI/PostgreSQL para ocorrências operacionais de um shopping, com triagem assistida por OpenAI e revisão humana.
 
-[Demonstração online](https://smartmall-ai-demo.vercel.app) com código privado compartilhado, dados fictícios e IA simulada. [Prontidão da API publicada](https://smartmall-ai-demo-api-8mez.onrender.com/health/ready). O [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md) registra os recursos e a verificação de 12 cenários de navegador contra Vercel, Render e Supabase.
+[Demonstração online](https://smartmall-ai-demo.vercel.app) com código privado compartilhado, dados fictícios e IA simulada. [Prontidão da API publicada](https://smartmall-ai-demo-api-8mez.onrender.com/health/ready). O [guia de deploy](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/deploy.md) registra os recursos e a verificação de 12 cenários de navegador contra Vercel, Render e Supabase.
 
-**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O frontend foi publicado e passou em 12 cenários de navegador, inclusive contra a nuvem; veja [evidências e pendências](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md). Validação com usuários e autenticação individual continuam pendentes.
+**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O frontend foi publicado e passou em 12 cenários de navegador, inclusive contra a nuvem; veja [evidências e pendências](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/deploy.md). Validação com usuários e autenticação individual continuam pendentes.
 
 ## Executar
 
@@ -35,7 +37,7 @@ As migrações são explícitas, sem criação automática de tabelas ao iniciar
 
 ## Rotas implementadas
 
-Base `/api/v1`. Detalhes de campos, enums e erros no [contrato compartilhado](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/contrato-api.md) e no Swagger.
+Base `/api/v1`. Detalhes de campos, enums e erros no [contrato compartilhado](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/contrato-api.md) e no Swagger.
 
 | Recurso | Operações |
 | --- | --- |
@@ -104,7 +106,7 @@ A API usa dados fictícios. O código compartilhado é opcional no modo de demon
 
 ## Deploy de demonstração
 
-`render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy manual e `/health/ready` como verificação. Por decisão da liderança, a API não publica automaticamente após merges; conferir o check `check` e a main antes de acionar **Manual Deploy → Deploy latest commit**. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
+`render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy manual e `/health/ready` como verificação. Por decisão da liderança, a API não publica automaticamente após merges; conferir o check `check` e a main antes de acionar **Manual Deploy → Deploy latest commit**. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/deploy.md).
 
 - `APP_ENV=demo` exige `AI_SIMULATION=true`. A demonstração publicada dispensa código de acesso: o Blueprint deixa `DEMO_ACCESS_TOKEN` vazio. Se configurado, o código deve ter pelo menos 32 caracteres ASCII sem espaços e não deve ser copiado para commits, URLs ou variáveis `VITE_`. Fora de `development`/`demo`, ele continua obrigatório.
 - Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
@@ -114,4 +116,4 @@ A API usa dados fictícios. O código compartilhado é opcional no modo de demon
 
 O código compartilhado permite acesso completo aos dados fictícios do ambiente; não estabelece permissões por pessoa nem torna o sistema adequado a dados reais. O modo `demo` sempre simula IA e não consome a OpenAI. O plano gratuito do Render pode suspender por inatividade.
 
-[Liderança: @geraldojoao](https://github.com/geraldojoao). Trabalhe em branch e abra PR conforme [CONTRIBUTING.md](CONTRIBUTING.md); a `main` mantém checks e proteções. Consulte [escopo](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/escopo.md), [backlog](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/backlog.md), [frontend](https://github.com/SmartMall-AI/fe-smartmall-ai) e [Trello](https://trello.com/b/TMJ0EfTl).
+[Liderança: @Setezin7](https://github.com/Setezin7). Trabalhe em branch e abra PR conforme [CONTRIBUTING.md](CONTRIBUTING.md); a `main` mantém checks e proteções. Consulte [escopo](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/escopo.md), [backlog](https://github.com/SmartMall-AI-Team/docs-smartmall-ai/blob/main/backlog.md), [frontend](https://github.com/SmartMall-AI-Team/fe-smartmall-ai) e [Trello](https://trello.com/b/TMJ0EfTl).
