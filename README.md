@@ -2,7 +2,9 @@
 
 API FastAPI/PostgreSQL para ocorrências operacionais de um shopping, com triagem assistida por OpenAI e revisão humana.
 
-**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O [frontend #3](https://github.com/SmartMall-AI/fe-smartmall-ai/pull/3) acrescenta interface executável com 10 testes integrados de navegador aprovados em desktop e celular; veja [evidências e pendências](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/entrega-frontend.md). Validação com usuários, autenticação real e hospedagem continuam pendentes.
+[Demonstração online](https://smartmall-ai-demo.vercel.app) com código privado compartilhado, dados fictícios e IA simulada. [Prontidão da API publicada](https://smartmall-ai-demo-api-8mez.onrender.com/health/ready). O [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md) registra os recursos e a verificação de 12 cenários de navegador contra Vercel, Render e Supabase.
+
+**Entrega implementada:** ocorrências, tarefas, responsáveis fictícios, equipamentos, filtros, histórico e dashboard. A integração OpenAI está implementada e testada com respostas HTTP controladas. A tentativa real de 13/11/2026 foi recusada por saldo esgotado da API (`credit_balance_exhausted`); não houve análise real validada. O frontend foi publicado e passou em 12 cenários de navegador, inclusive contra a nuvem; veja [evidências e pendências](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md). Validação com usuários e autenticação individual continuam pendentes.
 
 ## Executar
 
@@ -102,7 +104,7 @@ A API usa dados fictícios. O modo de demonstração tem uma barreira de acesso 
 
 ## Deploy de demonstração
 
-`render.yaml` prepara um serviço gratuito, com Python 3.12, dependências fixadas, deploy após checks aprovados e `/health/ready` como verificação. A publicação efetiva e os endereços serão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
+`render.yaml` configura o serviço gratuito publicado no Render, com Python 3.12, dependências fixadas, deploy após checks aprovados e `/health/ready` como verificação. O estado e os endereços estão registrados no [guia de deploy](https://github.com/SmartMall-AI/docs-smartmall-ai/blob/main/deploy.md).
 
 - `APP_ENV=demo` exige `AI_SIMULATION=true` e `DEMO_ACCESS_TOKEN` privado com pelo menos 32 caracteres ASCII sem espaços. Fora de `development`, a ausência do código impede iniciar a aplicação. O Blueprint gera esse código no Render; não o copie para commits, URLs ou variáveis `VITE_`.
 - Configure `DATABASE_URL` com conexão PostgreSQL TLS e `CORS_ORIGINS` com a origem HTTPS exata do frontend. Para rede IPv4 e Supabase, use o **Session pooler** indicado pelo painel, sem adivinhar o host.
