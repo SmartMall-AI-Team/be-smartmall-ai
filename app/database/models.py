@@ -5,9 +5,16 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.enums import Category, EquipmentStatus, OccurrenceStatus, Priority
+from app.core.enums import (
+    Category,
+    EquipmentStatus,
+    OccurrenceStatus,
+    Priority,
+    TaskStatus,
+    UserRole,
+)
 from app.database.base import Base
 
 
@@ -27,8 +34,6 @@ def utc_now() -> datetime:
 
 
 class Equipment(Base):
-    """Base para validar vínculos; o módulo de cadastro será entregue depois."""
-
     __tablename__ = "equipment"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
@@ -69,4 +74,59 @@ class Occurrence(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, server_default=func.now(), onupdate=utc_now
+    )
+    assigned_team: Mapped[str | None] = mapped_column(String(240))
+    recommendation: Mapped[str | None] = mapped_column(Text)
+    ai_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    tasks: Mapped[list["Task"]] = relationship(back_populates="occurrence", lazy="selectin")
+
+
+class User(Base):
+    """Cadastro de responsáveis; não representa uma sessão autenticada."""
+
+    __tablename__ = "users"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(String(240))
+    role: Mapped[UserRole] = mapped_column(enum_column(UserRole, "user_role"))
+    is_active: Mapped[bool] = mapped_column(default=True, server_default="true")
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    occurrence_id: Mapped[UUID] = mapped_column(ForeignKey("occurrences.id"), index=True)
+    title: Mapped[str] = mapped_column(String(240))
+    details: Mapped[str | None] = mapped_column(Text)
+    assigned_to: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    status: Mapped[TaskStatus] = mapped_column(
+        enum_column(TaskStatus, "task_status"),
+        default=TaskStatus.PENDING,
+        server_default="pending",
+        index=True,
+    )
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, server_default=func.now(), onupdate=utc_now
+    )
+    occurrence: Mapped[Occurrence] = relationship(back_populates="tasks")
+
+
+class OccurrenceEvent(Base):
+    __tablename__ = "occurrence_history"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    occurrence_id: Mapped[UUID] = mapped_column(ForeignKey("occurrences.id"), index=True)
+    task_id: Mapped[UUID | None] = mapped_column(ForeignKey("tasks.id"))
+    event_type: Mapped[str] = mapped_column(String(80))
+    previous_status: Mapped[str | None] = mapped_column(String(40))
+    new_status: Mapped[str | None] = mapped_column(String(40))
+    details: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, server_default=func.now()
     )

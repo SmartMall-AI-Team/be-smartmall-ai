@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -8,10 +7,11 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
-    field_serializer,
 )
 
 from app.core.enums import Category, OccurrenceStatus, Priority
+from app.schemas.common import APIModel, PatchModel
+from app.schemas.operations import Details, Name, TaskRead
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=240)]
 Description = Annotated[
@@ -30,7 +30,7 @@ class OccurrenceCreate(BaseModel):
     equipment_id: UUID | None = None
 
 
-class OccurrenceRead(BaseModel):
+class OccurrenceRead(APIModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -44,12 +44,25 @@ class OccurrenceRead(BaseModel):
     created_at: AwareDatetime
     updated_at: AwareDatetime
     ai_analysis: dict[str, Any] | None
-
-    @field_serializer("created_at", "updated_at")
-    def serialize_utc(self, value: datetime) -> str:
-        return value.astimezone(UTC).isoformat()
+    assigned_team: str | None
+    recommendation: str | None
+    ai_reviewed_at: AwareDatetime | None
 
 
 class OccurrenceDetail(OccurrenceRead):
-    # Tasks will have their own schema when the task endpoints are implemented.
-    tasks: list[dict[str, Any]] = Field(default_factory=list)
+    tasks: list[TaskRead] = Field(default_factory=list)
+
+
+class OccurrencePatch(PatchModel):
+    nullable_fields = {"category", "equipment_id", "assigned_team", "recommendation"}
+
+    title: Title | None = None
+    description: Description | None = None
+    location: Location | None = None
+    category: Category | None = None
+    equipment_id: UUID | None = None
+    status: OccurrenceStatus | None = None
+    priority: Priority | None = None
+    assigned_team: Name | None = None
+    recommendation: Details | None = None
+    confirm_ai_review: bool | None = None

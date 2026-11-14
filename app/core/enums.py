@@ -27,3 +27,15 @@ class EquipmentStatus(StrEnum):
     OPERATIONAL = "operational"
     MAINTENANCE = "maintenance"
     OUT_OF_SERVICE = "out_of_service"
+
+
+class TaskStatus(StrEnum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+
+class UserRole(StrEnum):
+    OPERATOR = "operator"
+    TECHNICIAN = "technician"
+    MANAGER = "manager"

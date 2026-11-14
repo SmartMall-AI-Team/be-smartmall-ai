@@ -33,7 +33,9 @@ def database_url():
         pytest.fail("Defina TEST_DATABASE_URL em .env ou no ambiente para executar a integração.")
     source_url = make_url(source).set(drivername="postgresql+psycopg")
     name = "smartmall_test_" + uuid4().hex
-    admin = create_engine(source_url, isolation_level="AUTOCOMMIT")
+    admin = create_engine(
+        source_url, isolation_level="AUTOCOMMIT", connect_args={"connect_timeout": 5}
+    )
     with admin.connect() as connection:
         connection.execute(text(f'CREATE DATABASE "{name}"'))
     isolated = DatabaseURL(source_url.set(database=name).render_as_string(hide_password=False))
@@ -50,13 +52,17 @@ def database_url():
 def clean_database(database_url):
     engine = create_engine(database_url)
     with engine.begin() as connection:
-        connection.execute(text("TRUNCATE occurrences, equipment CASCADE"))
+        connection.execute(text("TRUNCATE occurrences, equipment, users CASCADE"))
     engine.dispose()
     return database_url
 
 
 @pytest.fixture
 def client(clean_database):
-    app = create_app(Settings(_env_file=None, database_url=clean_database))
+    app = create_app(
+        Settings(
+            _env_file=None, database_url=clean_database, openai_api_key=None, ai_simulation=False
+        )
+    )
     with TestClient(app) as client:
         yield client
