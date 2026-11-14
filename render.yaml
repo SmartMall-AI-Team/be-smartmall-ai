@@ -16,7 +16,7 @@ services:
       - key: DEMO_SEED
         value: 'true'
       - key: DEMO_ACCESS_TOKEN
-        generateValue: true
+        value: ''
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS

@@ -17,7 +17,7 @@ TOKEN = "test-only-access-code-with-more-than-32-characters"
 
 def test_demo_configuration_fails_closed():
     for options in [
-        {"app_env": "demo", "ai_simulation": True},
+        {"app_env": "demo"},
         {"app_env": "demo", "demo_access_token": TOKEN},
         {"app_env": "production"},
         {"demo_access_token": "weak"},
@@ -27,6 +27,27 @@ def test_demo_configuration_fails_closed():
         with pytest.raises(ValidationError) as error:
             Settings(_env_file=None, **options)
         assert TOKEN not in str(error.value)
+
+
+def test_public_demo_serves_persisted_data_without_access_code(clean_database):
+    settings = Settings(
+        _env_file=None,
+        app_env="demo",
+        ai_simulation=True,
+        demo_seed=True,
+        demo_access_token="",
+        database_url=clean_database,
+    )
+    prepare_database(settings)
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/api/v1/access").json() == {"access_required": False}
+        listed = client.get("/api/v1/occurrences")
+        assert listed.status_code == 200
+        assert listed.headers["cache-control"] == "no-store"
+        occurrence = listed.json()[0]
+        analysis = client.post(f"/api/v1/occurrences/{occurrence['id']}/analyze")
+        assert analysis.status_code == 200
+        assert analysis.json()["is_simulation"] is True
 
 
 @pytest.mark.parametrize(

@@ -45,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     headers={"WWW-Authenticate": "Bearer", "Cache-Control": "no-store"},
                 )
         response = await call_next(request)
-        if token:
+        if token or settings.app_env == "demo":
             response.headers["Cache-Control"] = "no-store"
         return response
 
